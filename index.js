@@ -737,16 +737,27 @@ var authbuiltin = function(opt) {
 			return;
 		}
 
-		var session = opt.sessions[sessionid];
-		if (session) {
-			if (session.ua === $.ua) {
-				$.req.sessionid = meta.sessionid;
-				$.success(session.data);
-			} else {
-				$.invalid();
-				sessionid = null;
+		var id = sessionid.decrypt(opt.secret);
+
+		if (id) {
+			id = id.split('-');
+
+			if (!id[0] || !id[1] || !id[2])
+				id = null;
+
+			if (id) {
+				var session = opt.sessions[id[0]];
+				if (session) {
+					if (session.ua === $.ua) {
+						$.req.sessionid = session.sessionid;
+						$.success(session.data);
+					} else {
+						$.invalid();
+						sessionid = null;
+					}
+					return;
+				}
 			}
-			return;
 		}
 
 		if (opt.ddos && opt.blocked[$.ip] > opt.ddos) {
@@ -755,17 +766,6 @@ var authbuiltin = function(opt) {
 			return;
 		}
 
-		if (!sessionid) {
-			if (opt.ddos) {
-				if (opt.blocked[$.ip])
-					opt.blocked[$.ip]++;
-				else
-					opt.blocked[$.ip] = 1;
-			}
-			return;
-		}
-
-		var id = sessionid.decrypt(opt.secret);
 		if (!id) {
 
 			if (opt.ddos) {
@@ -779,8 +779,6 @@ var authbuiltin = function(opt) {
 			$.invalid();
 			return;
 		}
-
-		id = id.split('-');
 
 		var meta = { ip: $.req.ip, ua: $.ua, sessionid: id[0], userid: id[1] };
 
@@ -1322,14 +1320,17 @@ global.$ACTION = global.EXEC = function(schema, model, callback, controller) {
 	}
 
 	if (meta.validate) {
-
 		var $ = {};
-
 		$.controller = controller;
-
 		if (meta.method === 'PATCH' || meta.method === 'DELETE') {
 			meta.validate = true;
-			$.keys = model ? Object.keys(model) : EMPTYARRAY;
+			controller.req.keys = $.keys = [];
+			var fields = meta.schema.fields;
+			for (var i = 0; i < fields.length; i++) {
+				var val = model[fields[i]];
+				if (val != null)
+					$.keys.push(fields[i]);
+			}
 		}
 
 		var data = {};
@@ -5407,8 +5408,8 @@ DEF.onSchema = function(req, route, callback) {
 
 	if ((req.method === 'PATCH' || req.method === 'DELETE') && req.body) {
 		req.keys = $.keys = [];
-		for (var i = 0; i < schema.properties.length; i++) {
-			var key = schema.properties[i];
+		for (var i = 0; i < schema.fields.length; i++) {
+			var key = schema.fields[i];
 			if (key && req.body[key] != null)
 				req.keys.push(key);
 		}
