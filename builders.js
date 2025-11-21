@@ -234,6 +234,29 @@ SchemaOptions.prototype = {
 
 var SchemaOptionsProto = SchemaOptions.prototype;
 
+SchemaOptionsProto.promisify = function(fn, a, b, c) {
+	var $ = this;
+	return new Promise(function(resolve) {
+
+		var callback = function(err, response) {
+			if (err)
+				$.invalid(err);
+			else
+				resolve(response);
+		};
+
+		if (c !== undefined)
+			fn(a, b, c, callback);
+		else if (b !== undefined)
+			fn(a, b, callback);
+		else if (a !== undefined)
+			fn(a, callback);
+		else
+			fn(callback);
+
+	});
+};
+
 SchemaOptionsProto.action = function(schema, data) {
 
 	var c = schema[0];
@@ -4859,10 +4882,14 @@ function exec_callback(err, response) {
 
 	if (self.options.custom) {
 		if (self.$resolve) {
-			if (err)
-				self.$.invalid(err);
-			else
+			if (err) {
+				if (self.$)
+					self.$.invalid(err);
+				else
+					self.$reject(err);
+			} else
 				self.$resolve(response);
+
 			self.$ = null;
 			self.$reject = null;
 			self.$resolve = null;
@@ -4966,7 +4993,10 @@ function exec_callback(err, response) {
 
 		if (err) {
 			if (self.$resolve) {
-				self.$.invalid(err);
+				if (self.$)
+					self.$.invalid(err);
+				else
+					self.$reject(err);
 				self.$ = null;
 				self.$reject = null;
 				self.$resolve = null;
@@ -4991,7 +5021,12 @@ function exec_callback(err, response) {
 			} else if (output.status >= 400) {
 				err = output.status;
 				if (self.$resolve) {
-					self.$.invalid(err);
+
+					if (self.$)
+						self.$.invalid(err);
+					else
+						self.$reject(err);
+
 					self.$ = null;
 					self.$reject = null;
 					self.$resolve = null;
@@ -5009,9 +5044,12 @@ function exec_callback(err, response) {
 
 			if (self.$resolve) {
 
-				if (err)
-					self.$.invalid(err);
-				else
+				if (err) {
+					if (self.$)
+						self.$.invalid(err);
+					else
+						self.$reject(err);
+				} else
 					self.$resolve(model);
 
 				self.$ = null;
@@ -5048,9 +5086,12 @@ function exec_callback(err, response) {
 
 		if (self.$resolve) {
 
-			if (err)
-				self.$.invalid(err);
-			else
+			if (err) {
+				if (self.$)
+					self.$.invalid(err);
+				else
+					self.$reject(err);
+			} else
 				self.$resolve(val);
 
 			self.$ = null;

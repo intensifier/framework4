@@ -1,4 +1,48 @@
 ========================
+0.1.0
+========================
+
+- fixed markdown parser
+- improved parsing `<links>` in the markdown parser
+- fixed nested objects in JSON schemas
+- fixed string slug method
+- changed `max-age` header to `5 minutes`
+
+========================
+0.0.99
+========================
+
+- fixed `Message-ID` generator for email messages
+- __critital__ fixed cloning buffers in the `FlowStream`
+- added `FILESTORAGE().clone(id, newid, [callback])` method
+- fixed decoding of encoded HTML entities in the HTML parser
+- fixed loading `empty` flow in `Flow.load()` method
+
+========================
+0.0.98
+========================
+
+- fixed inline declared middleware `&middleware` in the `ROUTE()` method
+- fixed partial validation
+- fix image bug in the `Image.measureWEBP()` method by [Marek Mraz](https://github.com/Mrazbb)
+- improved Markdown parser
+- improved HTML parser
+- fixed `RESTBuilder.promise()`
+
+========================
+0.0.97
+========================
+
+- extended icon validator by adding support for `tic` keyword
+- fixed link generator for email and phone numbers in `Markdown`
+- improved `Number.pluralize()` method
+- added `PROMISIFY(fn, [a], [b])` method
+- added `$.promisify(fn, [a], [b])` method
+- added `FILESTORAGE().copy(id, path, [callback(err, meta)])`
+- fixed formatting `0` number in the `Tangular.format` helper
+- improved `DATA.query()` method
+
+========================
 0.0.96
 ========================
 
@@ -8,6 +52,7 @@
 - fixed `CLEANUP()` method
 - improved bookmarks in `Markdown`
 - fixed `unit testing`
+- fixed refreshing subscribers in Total.js Message Service
 
 ========================
 0.0.95

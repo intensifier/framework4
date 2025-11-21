@@ -1,6 +1,6 @@
 // Total.js Markdown
 // The MIT License
-// Copyright 2018-2023 (c) Peter Širka <petersirka@gmail.com>
+// Copyright 2018-2024 (c) Peter Širka <petersirka@gmail.com>
 
 const REG_DASH = /-{2,}/g;
 const REG_TAGS = /<[^>]*>/g;
@@ -9,7 +9,7 @@ const REG_ICONS = /(^|[^\w]):((fab|far|fas|fal|fad|fa|ti)\s(fa|ti)-)?[a-z-]+:([^
 const REG_KEYWORDS = /\{.*?\}\(.*?\)/g;
 const REG_LINKEXTERNAL = /(https|http):\/\//;
 const REG_FORMAT = /__.*?__|_.*?_|\*\*.*?\*\*|\*.*?\*|~~.*?~~|~.*?~/g;
-const REG_ORDERED = /^[a-z|0-9]{1,3}\.\s|^-\s/i;
+const REG_ORDERED = /^[a-z|0-9]{1,3}\.\s|^(-|\*|\+)\s/i;
 const REG_ORDEREDSIZE = /^(\s|\t)+/;
 const REG_CODE = /`.*?`/g;
 const REG_ENCODETAGS = /<|>/g;
@@ -64,9 +64,14 @@ function markdown_links(value) {
 	var link = value.substring(end + 2, value.length - 1);
 
 	// footnotes
-	if ((/^#\d+$/).test(link)) {
+	if ((/^#\d+$/).test(link))
 		return (/^\d+$/).test(text) ? '<sup data-id="{0}" class="markdown-footnote">{1}</sup>'.format(link.substring(1), text) : '<span data-id="{0}" class="markdown-footnote">{1}</span>'.format(link.substring(1), text);
-	}
+
+	if (link.isEmail())
+		return '<a href="mailto:' + link + '" rel="nofollow">' + text + '</a>';
+
+	if (link.isPhone())
+		return '<a href="tel:' + link + '" rel="nofollow">' + text + '</a>';
 
 	if (link.substring(0, 4) === 'www.')
 		link = 'https://' + link;
@@ -102,8 +107,19 @@ function markdown_keywords(value) {
 }
 
 function markdown_links2(value) {
+
 	value = value.substring(4, value.length - 4);
-	return '<a href="' + (value.isEmail() ? 'mailto:' : REG_LINKEXTERNAL.test(value) ? '' : 'http://') + value + '" target="_blank">' + value + '</a>';
+
+	let url = value;
+
+	if (value.isEmail())
+		url = 'mailto:' + value;
+	else if (value.isPhone())
+		url = 'tel:' + value;
+	else if (!REG_LINKEXTERNAL.test(value))
+		url = 'http://' + url;
+
+	return '<a href="' + url + '" target="_blank">' + value + '</a>';
 }
 
 function markdown_format(value, index, text) {
@@ -475,6 +491,17 @@ String.prototype.markdown = function(opt, nested) {
 		lines[i] = lines[i].replace(REG_ENCODETAGS, ENCODE);
 
 		if (!lines[i]) {
+
+			if (opt.emptynewline !== false && !lines[i - 1])
+				builder.push('<br />');
+
+			if (table) {
+				table = null;
+				if (opt.tables !== false)
+					builder.push('</tbody></table>');
+			}
+
+			closeul();
 			builder.push('');
 			continue;
 		}
@@ -727,7 +754,8 @@ String.prototype.markdown = function(opt, nested) {
 			else
 				size = 0;
 
-			var ultype = tmpline.charAt(0) === '-' ? 'ul' : 'ol';
+			var c = tmpline.charAt(0);
+			var ultype = c === '-' || c === '*' || c === '+' ? 'ul' : 'ol';
 			var tmpstr = (ultype === 'ol' ? tmpline.substring(tmpline.indexOf('.') + 1) : tmpline.substring(2));
 			var istask = false;
 

@@ -581,10 +581,10 @@ HEADERS.sse[HEADER_TYPE] = 'text/event-stream';
 HEADERS.sse['X-Powered-By'] = 'Total.js';
 HEADERS.file_lastmodified = {};
 HEADERS.file_lastmodified['Access-Control-Allow-Origin'] = '*';
-HEADERS.file_lastmodified[HEADER_CACHE] = 'public, max-age=11111111';
+HEADERS.file_lastmodified[HEADER_CACHE] = 'public, max-age=300';
 HEADERS.file_lastmodified['X-Powered-By'] = 'Total.js';
 HEADERS.file_release_compress = {};
-HEADERS.file_release_compress[HEADER_CACHE] = 'public, max-age=11111111';
+HEADERS.file_release_compress[HEADER_CACHE] = 'public, max-age=300';
 HEADERS.file_release_compress.Vary = 'Accept-Encoding, Last-Modified, User-Agent';
 HEADERS.file_release_compress['Access-Control-Allow-Origin'] = '*';
 HEADERS.file_release_compress['Last-Modified'] = 'Mon, 01 Jan 2001 08:00:00 GMT';
@@ -592,7 +592,7 @@ HEADERS.file_release_compress['Content-Encoding'] = 'gzip';
 HEADERS.file_release_compress['X-Powered-By'] = 'Total.js';
 HEADERS.file_release_compress_range = {};
 HEADERS.file_release_compress_range['Accept-Ranges'] = 'bytes';
-HEADERS.file_release_compress_range[HEADER_CACHE] = 'public, max-age=11111111';
+HEADERS.file_release_compress_range[HEADER_CACHE] = 'public, max-age=300';
 HEADERS.file_release_compress_range.Vary = 'Accept-Encoding, Last-Modified, User-Agent';
 HEADERS.file_release_compress_range['Access-Control-Allow-Origin'] = '*';
 HEADERS.file_release_compress_range['Last-Modified'] = 'Mon, 01 Jan 2001 08:00:00 GMT';
@@ -601,14 +601,14 @@ HEADERS.file_release_compress_range[HEADER_LENGTH] = '0';
 HEADERS.file_release_compress_range['Content-Range'] = '';
 HEADERS.file_release_compress_range['X-Powered-By'] = 'Total.js';
 HEADERS.file_release = {};
-HEADERS.file_release[HEADER_CACHE] = 'public, max-age=11111111';
+HEADERS.file_release[HEADER_CACHE] = 'public, max-age=300';
 HEADERS.file_release.Vary = 'Accept-Encoding, Last-Modified, User-Agent';
 HEADERS.file_release['Access-Control-Allow-Origin'] = '*';
 HEADERS.file_release['Last-Modified'] = 'Mon, 01 Jan 2001 08:00:00 GMT';
 HEADERS.file_release['X-Powered-By'] = 'Total.js';
 HEADERS.file_release_range = {};
 HEADERS.file_release_range['Accept-Ranges'] = 'bytes';
-HEADERS.file_release_range[HEADER_CACHE] = 'public, max-age=11111111';
+HEADERS.file_release_range[HEADER_CACHE] = 'public, max-age=300';
 HEADERS.file_release_range.Vary = 'Accept-Encoding, Last-Modified, User-Agent';
 HEADERS.file_release_range['Access-Control-Allow-Origin'] = '*';
 HEADERS.file_release_range['Last-Modified'] = 'Mon, 01 Jan 2001 08:00:00 GMT';
@@ -674,12 +674,12 @@ HEADERS.content.Vary = 'Accept-Encoding, Last-Modified, User-Agent';
 HEADERS.content.Expires = '-1';
 HEADERS.content['X-Powered-By'] = 'Total.js';
 HEADERS.stream_release_compress = {};
-HEADERS.stream_release_compress[HEADER_CACHE] = 'public, max-age=11111111';
+HEADERS.stream_release_compress[HEADER_CACHE] = 'public, max-age=300';
 HEADERS.stream_release_compress['Access-Control-Allow-Origin'] = '*';
 HEADERS.stream_release_compress['Content-Encoding'] = 'gzip';
 HEADERS.stream_release_compress['X-Powered-By'] = 'Total.js';
 HEADERS.stream_release = {};
-HEADERS.stream_release[HEADER_CACHE] = 'public, max-age=11111111';
+HEADERS.stream_release[HEADER_CACHE] = 'public, max-age=300';
 HEADERS.stream_release['Access-Control-Allow-Origin'] = '*';
 HEADERS.stream_release['X-Powered-By'] = 'Total.js';
 HEADERS.stream_debug_compress = {};
@@ -708,7 +708,7 @@ HEADERS.fsStreamReadRange = { flags: 'r', mode: '0666', autoClose: true, start: 
 HEADERS.responseLocalize = {};
 HEADERS.responseLocalize['Access-Control-Allow-Origin'] = '*';
 HEADERS.responseNotModified = {};
-HEADERS.responseNotModified[HEADER_CACHE] = 'public, max-age=11111111';
+HEADERS.responseNotModified[HEADER_CACHE] = 'public, max-age=300';
 HEADERS.responseNotModified['X-Powered-By'] = 'Total.js';
 HEADERS.response503 = {};
 HEADERS.response503[HEADER_CACHE] = 'private, no-cache, no-store, max-age=0';
@@ -2216,7 +2216,7 @@ function Framework() {
 	var self = this;
 
 	self.$id = null; // F.id ==> property
-	self.is4 = self.version = 4096;
+	self.is4 = self.version = 4100;
 	self.version_header = '4';
 	self.version_node = process.version + '';
 	self.version_node2 = self.version_node.replace(/v|\./g, '').parseInt();
@@ -2307,7 +2307,7 @@ function Framework() {
 		default_maxopenfiles: 100,
 		default_timezone: 'utc',
 		default_root: '',
-		default_response_maxage: '11111111',
+		default_response_maxage: '300',
 		default_errorbuilder_errors: false,
 		default_errorbuilder_status: 400,
 		default_errorbuilder_forxhr: true,
@@ -3792,12 +3792,13 @@ global.ROUTE = function(url, funcExecute, flags, length, language) {
 			flags.push(first === '-' ? 'unauthorized' : 'authorized');
 		}
 
-		url = url.replace(/\s&[#0-9a-z]+/gi, function(text) {
+		url = url.replace(/\s&[0-9a-z]+/gi, function(text) {
 			!flags && (flags = []);
-			let f = text.trim().substring(1);
-			if ((/^\d+$/).test(f))
-				f = +f;
-			flags.push(f);
+			let flag = text.trim();
+			let cleaned = flag.substring(1);
+			if ((/^\d+$/).test(cleaned))
+				flag = +cleaned;
+			flags.push(flag);
 			return '';
 		}).trim();
 
@@ -5692,6 +5693,7 @@ function tmscontroller() {
 
 		delete TMSBLOCKED[client.ip];
 		client.tmsready = true;
+		client.$subscribers = {};
 		tmsrefresh(client);
 	});
 
@@ -20839,6 +20841,28 @@ Api.evaluate('TotalAPI,TAPI', function(opt, next) {
 
 	REQUEST(req);
 });
+
+global.PROMISIFY = function(fn, a, b, c) {
+	return new Promise(function(resolve, reject) {
+
+		var callback = function(err, response) {
+			if (err)
+				reject(err);
+			else
+				resolve(response);
+		};
+
+		if (c !== undefined)
+			fn(a, b, c, callback);
+		else if (b !== undefined)
+			fn(a, b, callback);
+		else if (a !== undefined)
+			fn(a, callback);
+		else
+			fn(callback);
+
+	});
+};
 
 UIDGENERATOR_REFRESH();
 require('./textdb-querybuilder');

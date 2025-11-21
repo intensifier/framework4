@@ -4672,7 +4672,7 @@ SP.slug = function(max) {
 			builder += c;
 	}
 
-	if (builder.length > 1) {
+	if (builder.length > 0) {
 		length = builder.length - 1;
 		return builder[length] === '-' ? builder.substring(0, length) : builder;
 	} else if (!length)
@@ -4895,6 +4895,16 @@ NP.pluralize = function(zero, one, few, other) {
 
 	var num = this;
 	var value = '';
+
+	if (!one && typeof(zero) === 'string') {
+		zero = zero.split(',');
+		if (zero instanceof Array) {
+			one = zero[1];
+			few = zero[2];
+			other = zero[3];
+			zero = zero[0];
+		}
+	}
 
 	if (num == 0)
 		value = zero || '';
@@ -7351,35 +7361,7 @@ exports.jsonschematransform = function(value, partial, error) {
 	if (!error)
 		error = new ErrorBuilder();
 
-	var response = null;
-
-	if (partial) {
-
-		var tmp = {};
-		var schema = {};
-
-		schema.properties = {};
-		schema.required = [];
-
-		for (let key in value) {
-			let prop = this.properties[key];
-			if (prop) {
-				tmp[key] = value[key];
-				schema.properties[key] = prop;
-				if (this.required && this.required.includes(key))
-					schema.required.push(key);
-			}
-		}
-
-		schema.$id = this.$id;
-		schema.$schema = this.$schema;
-		schema.type = this.type;
-
-		response = framework_jsonschema.transform(schema, error, tmp);
-
-	} else
-		response = framework_jsonschema.transform(this, error, value);
-
+	var response = framework_jsonschema.transform(this, error, value, null, null, partial);
 	return { error: error.is ? error : null, response: response };
 };
 
